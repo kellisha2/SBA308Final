@@ -1,0 +1,1 @@
+Creating an array of objects from arrays and objects and manipulating data
