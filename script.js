@@ -173,3 +173,57 @@ const CourseInfo = {
             console.error(`Error processing submission: ${error.message}`);
         }
     });
+
+    result.forEach(learner => {
+        try {
+            let totalScore = 0;
+            let totalPossiblePoints = 0;
+
+            submissions.forEach(submission => {
+                try {
+                    if (submission.learner_id === learner.id) {
+                        let assignment = null;
+                        for (let i = 0; i < ag.assignments.length; i++) {
+                            if (ag.assignments[i].id === submission.assignment_id) {
+                                assignment = ag.assignments[i];
+                                break;
+                            }
+                        }
+                        if (!assignment) {
+                            throw new Error(`Assignment with ID ${submission.assignment_id} not found.`);
+                        }
+
+                        const pointsPossible = assignment.points_possible;
+                        const dueDate = new Date(assignment.due_at);
+                        const submittedDate = new Date(submission.submission.submitted_at);
+
+                        if (dueDate > currentDate) {
+                            return;
+                        }
+
+                        let adjustedScore = submission.submission.score;
+
+                        if (submittedDate > dueDate) {
+                            const latePenalty = pointsPossible * 0.1;
+                            adjustedScore = adjustedScore - latePenalty;
+                        }
+
+                        totalScore += adjustedScore;
+                        totalPossiblePoints += pointsPossible;
+                    }
+                } catch (error) {
+                    console.error(`Error processing score for submission: ${error.message}`);
+                }
+            });
+            learner.avg = totalScore / totalPossiblePoints;
+        } catch (error) {
+            console.error(`Error calculating average for learner ID ${learner.id}: ${error.message}`);
+        }
+    });
+
+    return result;
+}
+  
+  const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+  
+  console.log(result);
